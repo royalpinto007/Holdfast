@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # to attach the APK to a GitHub Release
+
+jobs:
+  release:
+    name: Build and publish the release APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # The tests and the privacy gate run again here rather than being taken
+      # on trust from the CI run on main. A release is the artefact people
+      # actually install, so it is worth proving against the exact commit being
+      # tagged.
+      - name: Tests
+        run: ./gradlew :app:testDebugUnitTest
+
+      - name: Privacy claims
+        run: ./scripts/check-privacy-claims.sh
+
+      - name: Build release APK
+        run: ./gradlew :app:assembleRelease
+
+      # The source manifest is checked by the gate above. This checks the thing
+      # that ships: an APK that somehow gained a network permission would make
+      # the whole listing a lie, so it fails the release rather than the review.
+      - name: The shipped APK must declare no network permission
+        run: |
+          apk=app/build/outputs/apk/release/app-release.apk
+          if grep -aqE 'android\.permission\.(INTERNET|ACCESS_NETWORK_STATE)' "$apk"; then
+            echo "::error::the built APK declares a network permission"
+            exit 1
+          fi
+          echo "no network permission in $apk"
+
+      - name: Name the APK after the tag
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk \
+             "holdfast-${{ github.ref_name }}.apk"
+          ls -la holdfast-*.apk
+
+      - name: Publish the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Holdfast ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
+          files: holdfast-*.apk
+          fail_on_unmatched_files: true
