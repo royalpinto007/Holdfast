@@ -1,0 +1,38 @@
+{
+  "id": "3b7a91c4",
+  "title": "Flat 3B, move-in",
+  "what": "Condition at handover, kept for the deposit return.",
+  "openedAt": 1754636400000,
+  "entries": [
+    {
+      "id": "a1f3c210",
+      "at": 1754640000000,
+      "note": "Hallway wall, scuff above the skirting board. Present at handover.",
+      "photoHash": "ce87d090af3d8f24776a4e23b46cf526132c3c726d77f5256b01b378ef17452a",
+      "photoFile": "p1.jpg",
+      "place": "Flat 3B, Kochi",
+      "prev": "0000000000000000000000000000000000000000000000000000000000000000",
+      "hash": "473ca903043ea9d0c6921fd7ce72ea2abd45b88607137886614b586a461cf0a0"
+    },
+    {
+      "id": "b7d4e881",
+      "at": 1754640420000,
+      "note": "Bathroom ceiling, damp patch about 20cm across. Reported to agent same day.",
+      "photoHash": "471ea8c512bca9aec6fcadb4d7aab70d5e0c2ef7726973fb101198f912d7ac5a",
+      "photoFile": "p2.jpg",
+      "place": "Flat 3B, Kochi",
+      "prev": "473ca903043ea9d0c6921fd7ce72ea2abd45b88607137886614b586a461cf0a0",
+      "hash": "a6c23f55a293b1b98a1b42cb498160fef5f5ae943924aa721c8e0ce32f584e87"
+    },
+    {
+      "id": "c2e91a45",
+      "at": 1754641140000,
+      "note": "Kitchen worktop, burn mark beside the hob.",
+      "photoHash": "20c7cd4bd93e6f80b28d073578b92631d68f3b443c1a999918b3c39e5b5c4d0f",
+      "photoFile": "p3.jpg",
+      "place": "Flat 3B, Kochi",
+      "prev": "a6c23f55a293b1b98a1b42cb498160fef5f5ae943924aa721c8e0ce32f584e87",
+      "hash": "941978e2b90b59b739acc113cff4fc77022cf521a7f06a7b59bf340653e3f0c3"
+    }
+  ]
+}
