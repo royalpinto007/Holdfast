@@ -105,8 +105,7 @@ fun CaseScreen(
                 .statusBarsPadding()
                 .padding(horizontal = Space.lg),
             verticalArrangement = Arrangement.spacedBy(Space.md),
-            // Clears the sealing button, which floats over the list.
-            contentPadding = PaddingValues(top = Space.sm, bottom = 148.dp),
+            contentPadding = PaddingValues(top = Space.sm, bottom = BottomActionInset),
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -173,28 +172,17 @@ fun CaseScreen(
             }
         }
 
-        Button(
+        BottomAction(
+            label = "Seal a photo",
+            icon = Icons.Rounded.Add,
             onClick = {
                 val target = vault.newPhotoTarget(current.id, System.currentTimeMillis())
                 pendingPhoto = target
                 val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", target)
                 camera.launch(uri)
             },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(Space.xl)
-                .heightIn(min = 58.dp),
-            shape = RoundedCornerShape(Corner.chip),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ),
-        ) {
-            Icon(Icons.Rounded.Add, null, Modifier.size(20.dp))
-            Spacer(Modifier.width(Space.sm))
-            Text("Seal a photo", style = MaterialTheme.typography.labelLarge)
-        }
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 
     noteFor?.let { photo ->
@@ -279,36 +267,17 @@ private fun VerdictHero(case: Case, verdict: Verdict) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
-                MiniStat("ENTRIES", case.entries.size.toString(), Modifier.weight(1f))
-                MiniStat(
-                    "SPAN",
-                    "${Stamp.spanDays(case.openedAt, case.entries.lastOrNull()?.at ?: case.openedAt)}d",
-                    Modifier.weight(1f),
-                )
-                MiniStat("HEAD", shortHash(case.head), Modifier.weight(1.8f), mono = true)
-            }
-        }
-    }
-}
-
-@Composable
-private fun MiniStat(label: String, value: String, modifier: Modifier = Modifier, mono: Boolean = false) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(Corner.tile),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-        Column(Modifier.padding(Space.md)) {
-            Text(label, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(Space.xs))
-            Text(
-                value,
-                style = if (mono) Mono else MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            val days = Stamp.spanDays(
+                case.openedAt,
+                case.entries.lastOrNull()?.at ?: case.openedAt,
+            )
+            StatRow(
+                listOf(
+                    Stat("ENTRIES", case.entries.size.toString()),
+                    // "0d" saved four characters and cost the reader the meaning.
+                    Stat("COVERS", if (days == 1L) "1 day" else "$days days"),
+                    Stat("SEAL", shortHash(case.head, head = 4, tail = 4), mono = true),
+                ),
             )
         }
     }

@@ -163,4 +163,15 @@ class ChainTest {
         assertEquals("aaaaaa…aaaa", shortHash(h))
         assertEquals("short", shortHash("short"))
     }
+
+    @Test
+    fun `the stat tile form is short enough to fit and still shows both ends`() {
+        // A stat tile is a third of the screen. The 6+4 form overflowed it and
+        // the layout truncated the result to "941978…f0…", which loses the tail.
+        val h = "941978e2b90b59b739acc113cff4fc77022cf521a7f06a7b59bf340653e3f0c3"
+        val tile = shortHash(h, head = 4, tail = 4)
+        assertEquals("9419…f0c3", tile)
+        assertTrue(tile.length <= 9)
+        assertTrue(tile.endsWith(h.takeLast(4)))
+    }
 }

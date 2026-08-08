@@ -82,6 +82,7 @@ class MainActivity : ComponentActivity() {
 }
 
 private sealed interface Screen {
+    data object Intro : Screen
     data object Cases : Screen
     data class Detail(val caseId: String) : Screen
 }
@@ -90,13 +91,31 @@ private sealed interface Screen {
 private fun HoldfastApp() {
     val context = LocalContext.current
     val vault = remember { Vault(context) }
-    var screen by remember { mutableStateOf<Screen>(Screen.Cases) }
+    // Whether the explainer has been seen. Local preferences, like everything
+    // else here: there is no account to hang it off and nowhere to sync it to.
+    val prefs = remember {
+        context.getSharedPreferences("holdfast", android.content.Context.MODE_PRIVATE)
+    }
+    var explained by remember { mutableStateOf(prefs.getBoolean("explained", false)) }
+    var screen by remember {
+        mutableStateOf<Screen>(if (explained) Screen.Cases else Screen.Intro)
+    }
     var cases by remember { mutableStateOf(vault.list()) }
 
     when (val s = screen) {
+        Screen.Intro -> IntroScreen(
+            firstRun = !explained,
+            onDone = {
+                prefs.edit().putBoolean("explained", true).apply()
+                explained = true
+                screen = Screen.Cases
+            },
+        )
+
         Screen.Cases -> CasesScreen(
             cases = cases,
             onOpen = { screen = Screen.Detail(it.id) },
+            onExplain = { screen = Screen.Intro },
             onCreate = { title, what ->
                 vault.create(title, what, System.currentTimeMillis())
                 cases = vault.list()
@@ -130,6 +149,7 @@ private fun HoldfastApp() {
 private fun CasesScreen(
     cases: List<Case>,
     onOpen: (Case) -> Unit,
+    onExplain: () -> Unit,
     onCreate: (String, String) -> Unit,
 ) {
     var creating by remember { mutableStateOf(false) }
@@ -145,17 +165,36 @@ private fun CasesScreen(
                 .statusBarsPadding()
                 .padding(horizontal = Space.lg),
             verticalArrangement = Arrangement.spacedBy(Space.md),
-            contentPadding = PaddingValues(top = Space.xl, bottom = 120.dp),
+            contentPadding = PaddingValues(top = Space.xl, bottom = BottomActionInset),
         ) {
             item {
                 Column(Modifier.padding(bottom = Space.sm)) {
-                    Text("HOLDFAST", style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("HOLDFAST", style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.weight(1f))
+                        // The explainer stays reachable. Somebody who skipped it
+                        // on day one is exactly the person who needs it later.
+                        TextButton(onClick = onExplain) {
+                            Text(
+                                "How this works",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(Space.sm))
                     Text(
                         "A record that cannot be quietly changed.",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Spacer(Modifier.height(Space.md))
+                    Text(
+                        "Photos sealed in order, so nothing can be reworded, removed or " +
+                            "backdated later without it showing.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -169,23 +208,12 @@ private fun CasesScreen(
             }
         }
 
-        Button(
+        BottomAction(
+            label = "Start a record",
+            icon = Icons.Rounded.Add,
             onClick = { creating = true },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(Space.xl)
-                .heightIn(min = 58.dp),
-            shape = RoundedCornerShape(Corner.chip),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ),
-        ) {
-            Icon(Icons.Rounded.Add, null, Modifier.size(20.dp))
-            Spacer(Modifier.width(Space.sm))
-            Text("Start a record", style = MaterialTheme.typography.labelLarge)
-        }
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 
     if (creating) {
@@ -209,15 +237,11 @@ private fun EmptyState() {
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
+            // The explainer carries the argument now, so this says the one thing
+            // it cannot: start before you need it, because afterwards is too late.
             Text(
-                "Start one before you need it. A move-in walkthrough, a delivery that arrived damaged, " +
-                    "work you finished on a date somebody may later dispute.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                "Each photo is sealed to the one before it, so nothing can be added, removed or " +
-                    "reworded afterwards without it showing.",
+                "Start one before you need it. A move-in walkthrough, a delivery that arrived " +
+                    "damaged, work you finished on a date somebody may later dispute.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -264,36 +288,15 @@ private fun CaseTile(case: Case, onClick: () -> Unit) {
                 SealPill(intact = intact, sealed = case.entries.isNotEmpty())
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
-                MiniTile("ENTRIES", case.entries.size.toString(), Modifier.weight(1f))
-                MiniTile(
-                    "OPENED",
-                    Stamp.day(case.openedAt).substringBeforeLast(' '),
-                    Modifier.weight(1.4f),
-                )
-                MiniTile("HEAD", shortHash(case.head), Modifier.weight(1.4f), mono = true)
-            }
-        }
-    }
-}
-
-@Composable
-private fun MiniTile(label: String, value: String, modifier: Modifier = Modifier, mono: Boolean = false) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(Corner.tile),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-        Column(Modifier.padding(Space.md)) {
-            Text(label, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(Space.xs))
-            Text(
-                value,
-                style = if (mono) Mono else MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            StatRow(
+                listOf(
+                    Stat("ENTRIES", case.entries.size.toString()),
+                    Stat("OPENED", Stamp.day(case.openedAt).substringBeforeLast(' ')),
+                    // "Head" is the right word for the end of a chain and the
+                    // export still uses it, but nobody meets this app knowing
+                    // that. On screen it is the seal.
+                    Stat("SEAL", shortHash(case.head, head = 4, tail = 4), mono = true),
+                ),
             )
         }
     }

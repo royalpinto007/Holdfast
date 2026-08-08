@@ -126,7 +126,9 @@ class Vault(private val context: Context) {
             appendLine("hash   ${e.hash}")
             appendLine()
         }
-        appendLine("head ${case.head}")
+        // The app calls this the seal. Both words are here so a reader can match
+        // the file against the screen it came from.
+        appendLine("head, the latest seal: ${case.head}")
     }
 
     fun writeExport(case: Case): File {

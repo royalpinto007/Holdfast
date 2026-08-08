@@ -161,6 +161,14 @@ fun verify(case: Case, photoHashes: Map<String, String> = emptyMap()): Verdict {
     return Verdict.Intact
 }
 
-/** A short, readable form of a hash, for showing a person. */
-fun shortHash(hash: String): String =
-    if (hash.length <= 12) hash else "${hash.take(6)}…${hash.takeLast(4)}"
+/**
+ * A short, readable form of a hash, for showing a person.
+ *
+ * Both ends are kept rather than a prefix, because the way people actually
+ * check a hash is to glance at the start and the end. How many characters each
+ * end gets is a parameter for one reason: a stat tile is a third of a screen
+ * wide, and a form that does not fit gets truncated by the text layout into a
+ * second ellipsis, which reads as a bug and hides the tail it was chosen for.
+ */
+fun shortHash(hash: String, head: Int = 6, tail: Int = 4): String =
+    if (hash.length <= head + tail + 2) hash else "${hash.take(head)}…${hash.takeLast(tail)}"

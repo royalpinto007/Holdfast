@@ -189,6 +189,16 @@ val Mono = TextStyle(
     letterSpacing = 0.sp,
 )
 
+/**
+ * A hash sitting in a stat tile beside ordinary values.
+ *
+ * Monospace runs optically smaller than the sans at the same point size, and
+ * the line height matches titleMedium exactly. Both matter: without the first
+ * the hash looks like fine print next to the numbers, and without the second
+ * the values in a row of tiles sit on different baselines.
+ */
+val MonoStat = Mono.copy(fontSize = 13.sp, lineHeight = 21.sp)
+
 @Composable
 fun HoldfastTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     MaterialTheme(
