@@ -139,7 +139,7 @@ fun verify(case: Case, photoHashes: Map<String, String> = emptyMap()): Verdict {
             preimage(entry.id, entry.at, entry.note, entry.photoHash, entry.place, entry.prev),
         )
         if (recomputed != entry.hash) {
-            return Verdict.Broken(index, entry.id, "its contents changed after it was sealed")
+            return Verdict.Broken(index, entry.id, "was changed after it was sealed")
         }
         // Time must not run backwards. An entry dated before the one it follows
         // is the shape of a record written to suit an argument afterwards.
@@ -153,7 +153,7 @@ fun verify(case: Case, photoHashes: Map<String, String> = emptyMap()): Verdict {
         if (file != null && sealedPhoto != null) {
             val actual = photoHashes[file]
             if (actual != null && actual != sealedPhoto) {
-                return Verdict.Broken(index, entry.id, "its photo was replaced")
+                return Verdict.Broken(index, entry.id, "has a photo that was replaced")
             }
         }
         expectedPrev = entry.hash

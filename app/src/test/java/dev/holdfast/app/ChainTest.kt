@@ -47,7 +47,7 @@ class ChainTest {
         val verdict = verify(tampered)
         assertTrue(verdict is Verdict.Broken)
         assertEquals(1, (verdict as Verdict.Broken).index)
-        assertTrue(verdict.reason.contains("changed"))
+        assertTrue(verdict.reason.contains("was changed"))
     }
 
     @Test
@@ -93,7 +93,7 @@ class ChainTest {
         val hashes = mapOf("p0.jpg" to "photo0", "p1.jpg" to "something else")
         val verdict = verify(case, hashes)
         assertTrue(verdict is Verdict.Broken)
-        assertTrue((verdict as Verdict.Broken).reason.contains("photo was replaced"))
+        assertTrue((verdict as Verdict.Broken).reason.contains("photo that was replaced"))
     }
 
     @Test

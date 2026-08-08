@@ -105,7 +105,8 @@ fun CaseScreen(
                 .statusBarsPadding()
                 .padding(horizontal = Space.lg),
             verticalArrangement = Arrangement.spacedBy(Space.md),
-            contentPadding = PaddingValues(top = Space.sm, bottom = 130.dp),
+            // Clears the sealing button, which floats over the list.
+            contentPadding = PaddingValues(top = Space.sm, bottom = 148.dp),
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
