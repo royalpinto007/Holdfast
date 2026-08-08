@@ -81,6 +81,7 @@ fun CaseScreen(
     var pendingPhoto by remember { mutableStateOf<File?>(null) }
     var noteFor by remember { mutableStateOf<File?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var photoSize by remember { mutableStateOf(PhotoSize.load(context)) }
 
     val verdict = remember(current) { verify(current, vault.photoHashes(current)) }
 
@@ -137,12 +138,30 @@ fun CaseScreen(
             item { VerdictHero(case = current, verdict = verdict) }
 
             item {
-                Text(
-                    "SEALED ENTRIES",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = Space.sm, start = Space.xs),
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Space.sm, start = Space.xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "SEALED ENTRIES",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    // Sits on the list it controls rather than in the top bar,
+                    // so it is obvious what the three letters resize.
+                    if (current.entries.any { it.photoFile != null }) {
+                        PhotoSizePicker(
+                            selected = photoSize,
+                            onSelect = {
+                                photoSize = it
+                                PhotoSize.save(context, it)
+                            },
+                        )
+                    }
+                }
             }
 
             if (current.entries.isEmpty()) {
@@ -167,6 +186,7 @@ fun CaseScreen(
                     index = index,
                     entry = entry,
                     photo = entry.photoFile?.let { vault.photoFile(current.id, it) },
+                    size = photoSize,
                     broken = (verdict as? Verdict.Broken)?.index == index,
                 )
             }
@@ -284,15 +304,29 @@ private fun VerdictHero(case: Case, verdict: Verdict) {
 }
 
 @Composable
-private fun EntryTile(index: Int, entry: Entry, photo: File?, broken: Boolean) {
+private fun EntryTile(
+    index: Int,
+    entry: Entry,
+    photo: File?,
+    size: PhotoSize,
+    broken: Boolean,
+) {
     val dark = MaterialTheme.colorScheme.background.let { it.red + it.green + it.blue < 1.2f }
-    val bitmap = remember(photo?.path) {
+    // Small draws a 72dp thumbnail, so decoding at the full-width sample rate
+    // would be wasted work and wasted memory on a long record.
+    val sample = if (size == PhotoSize.Small) 8 else 4
+    val bitmap = remember(photo?.path, sample) {
         photo?.takeIf { it.exists() }?.let { f ->
             runCatching {
-                val opts = BitmapFactory.Options().apply { inSampleSize = 4 }
+                val opts = BitmapFactory.Options().apply { inSampleSize = sample }
                 BitmapFactory.decodeFile(f.path, opts)
             }.getOrNull()
         }
+    }
+    val sealTint = if (broken) {
+        if (dark) BreakRed else BreakRedDark
+    } else {
+        if (dark) SealGreen else SealGreenDark
     }
 
     Surface(
@@ -300,6 +334,59 @@ private fun EntryTile(index: Int, entry: Entry, photo: File?, broken: Boolean) {
         color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = Modifier.fillMaxWidth(),
     ) {
+        if (size == PhotoSize.Small) {
+            // A row, not a shrunken card. At this size the point is to scan a
+            // long record, so the thumbnail sits beside the text rather than
+            // pushing every entry a screen apart.
+            Row(
+                Modifier.padding(Space.md),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                bitmap?.let {
+                    Image(
+                        bitmap = it.asImageBitmap(),
+                        contentDescription = entry.note.ifBlank { "Sealed photo" },
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(RoundedCornerShape(Corner.tile)),
+                        contentScale = ContentScale.Crop,
+                    )
+                    Spacer(Modifier.width(Space.md))
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        Stamp.short(entry.at),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (entry.note.isNotBlank()) {
+                        Text(
+                            entry.note,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    // Shortened, never dropped. Making the photos smaller must
+                    // not quietly remove the thing the record is for.
+                    Text(
+                        "seal ${shortHash(entry.hash, head = 4, tail = 4)}",
+                        style = Mono,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Spacer(Modifier.width(Space.sm))
+                Icon(
+                    imageVector = if (broken) Icons.Rounded.Warning else Icons.Rounded.Check,
+                    contentDescription = if (broken) "Broken" else "Sealed",
+                    tint = sealTint,
+                    modifier = Modifier.size(17.dp),
+                )
+            }
+            return@Surface
+        }
+
         Column {
             bitmap?.let {
                 Image(
@@ -307,12 +394,17 @@ private fun EntryTile(index: Int, entry: Entry, photo: File?, broken: Boolean) {
                     contentDescription = entry.note.ifBlank { "Sealed photo" },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(4f / 3f)
+                        // Medium crops to a letterbox so roughly twice as many
+                        // entries fit on screen without losing the subject.
+                        .aspectRatio(if (size == PhotoSize.Medium) 16f / 9f else 4f / 3f)
                         .clip(RoundedCornerShape(topStart = Corner.card, topEnd = Corner.card)),
                     contentScale = ContentScale.Crop,
                 )
             }
-            Column(Modifier.padding(Space.xl), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
+            Column(
+                Modifier.padding(if (size == PhotoSize.Medium) Space.lg else Space.xl),
+                verticalArrangement = Arrangement.spacedBy(Space.sm),
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "${index + 1}",
@@ -321,7 +413,7 @@ private fun EntryTile(index: Int, entry: Entry, photo: File?, broken: Boolean) {
                     )
                     Spacer(Modifier.width(Space.md))
                     Text(
-                        Stamp.full(entry.at),
+                        if (size == PhotoSize.Medium) Stamp.short(entry.at) else Stamp.full(entry.at),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -329,11 +421,7 @@ private fun EntryTile(index: Int, entry: Entry, photo: File?, broken: Boolean) {
                     Icon(
                         imageVector = if (broken) Icons.Rounded.Warning else Icons.Rounded.Check,
                         contentDescription = if (broken) "Broken" else "Sealed",
-                        tint = if (broken) {
-                            if (dark) BreakRed else BreakRedDark
-                        } else {
-                            if (dark) SealGreen else SealGreenDark
-                        },
+                        tint = sealTint,
                         modifier = Modifier.size(17.dp),
                     )
                 }
@@ -342,6 +430,8 @@ private fun EntryTile(index: Int, entry: Entry, photo: File?, broken: Boolean) {
                         entry.note,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = if (size == PhotoSize.Medium) 2 else Int.MAX_VALUE,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 entry.place?.let {
@@ -350,7 +440,11 @@ private fun EntryTile(index: Int, entry: Entry, photo: File?, broken: Boolean) {
                 }
                 // The hash is shown, always. A seal nobody can read is a logo.
                 Text(
-                    "seal ${shortHash(entry.hash)}  ←  ${shortHash(entry.prev)}",
+                    if (size == PhotoSize.Medium) {
+                        "seal ${shortHash(entry.hash)}"
+                    } else {
+                        "seal ${shortHash(entry.hash)}  ←  ${shortHash(entry.prev)}"
+                    },
                     style = Mono,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

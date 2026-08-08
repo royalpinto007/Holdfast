@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a problem.
+title: '[Bug]: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not attach a real record. It contains photographs of your
+        home or your property, and nothing here is worth that. The export
+        prints the hashes in full, which is enough to diagnose a seal problem
+        without the photos.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem
+      options:
+        - A record shows as broken and I did not change it
+        - A record shows as intact and I did change it
+        - The export does not verify with sha256sum by hand
+        - Sealing a photo failed or the camera did not return
+        - Something in the interface
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: For a seal problem, the verdict line the app showed and the entry number it named.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: hashes
+    attributes:
+      label: Hashes, if this is about a seal
+      description: >
+        The relevant lines from the export, which are hashes and times only.
+        Redact the notes and the place if they say anything you would rather
+        not post.
+      render: text
+  - type: input
+    id: android
+    attributes:
+      label: Android version and device
+      placeholder: 'Android 15, Pixel 8'
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Holdfast version
+      placeholder: '1.0.0'

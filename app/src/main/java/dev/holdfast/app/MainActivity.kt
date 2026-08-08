@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -101,6 +102,16 @@ private fun HoldfastApp() {
         mutableStateOf<Screen>(if (explained) Screen.Cases else Screen.Intro)
     }
     var cases by remember { mutableStateOf(vault.list()) }
+
+    // Navigation here is a single `screen` value rather than a nav library, and
+    // nothing was listening for the system back gesture, so back closed the app
+    // from inside a record instead of returning to the list. It is handled per
+    // screen, and deliberately not handled on Cases, where leaving the app is
+    // what back should do.
+    BackHandler(enabled = screen != Screen.Cases) {
+        if (screen is Screen.Detail) cases = vault.list()
+        screen = Screen.Cases
+    }
 
     when (val s = screen) {
         Screen.Intro -> IntroScreen(
