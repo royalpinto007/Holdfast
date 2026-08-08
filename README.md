@@ -21,48 +21,48 @@ it showing.
 
 ## Screenshots
 
-![A photo proves what. It does not prove when.](docs/media/1-what-it-does.webp)
-
-<sub>A photo proves what. It does not prove when.</sub>
-
-![Reword an entry and the seal breaks at that entry.](docs/media/2-try-breaking-it.webp)
-
-<sub>The app ships with a sample chain and buttons that break it. The verdict
-comes from the same check your own records go through.</sub>
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <img src="docs/media/1-what-it-does.webp" width="100%" alt="A photo proves what. It does not prove when.">
+      <sub><b>The gap it closes.</b> A photo proves what a room looked like, not when.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src="docs/media/2-try-breaking-it.webp" width="100%" alt="Reword an entry and the seal breaks at that entry.">
+      <sub><b>Break it yourself.</b> The verdict comes from the same check your own records go through.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src="docs/media/6-broken.webp" width="100%" alt="It names the entry, and says what was done to it.">
+      <sub><b>Caught.</b> It names the entry, and says what was done to it.</sub>
+    </td>
+  </tr>
+</table>
 
 <details>
-<summary><b>See 4 more</b></summary>
+<summary><b>Three more</b></summary>
 
-### Records
-
-![Every record says whether it still holds.](docs/media/3-record-list.webp)
-
-<sub>Every record says whether it still holds.</sub>
-
-### Timeline
-
-![Each entry carries its time and its seal.](docs/media/4-timeline.webp)
-
-<sub>Each entry carries its time and its seal.</sub>
-
-### Sizes
-
-![Small, medium or large photos.](docs/media/5-sizes.webp)
-
-<sub>Small turns a long record into something you can skim. The seal and the
-tick never shrink away.</sub>
-
-### Broken
-
-![It names the entry, and says what was done to it.](docs/media/6-broken.webp)
-
-<sub>It names the entry, and says what was done to it.</sub>
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <img src="docs/media/3-record-list.webp" width="100%" alt="Every record says whether it still holds.">
+      <sub><b>Records.</b> Every one says whether it still holds.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src="docs/media/4-timeline.webp" width="100%" alt="Each entry carries its time and its seal.">
+      <sub><b>Timeline.</b> Each entry carries its time and its seal.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src="docs/media/5-sizes.webp" width="100%" alt="Small, medium or large photos.">
+      <sub><b>Sizes.</b> Small skims a long record. The seal never shrinks away.</sub>
+    </td>
+  </tr>
+</table>
 
 </details>
 
-<sub>Every screenshot is captured from the app running on a physical device.
-The photos in the sample record are drawn rather than photographed, so this
-repository carries no pictures of anybody's home.</sub>
+<sub>Captured from the app running on a physical device, with the status and
+navigation bars cropped out. The photos in the sample record are drawn rather
+than photographed, so this repository carries no pictures of anybody's home.</sub>
 
 <!-- media:end -->
 
