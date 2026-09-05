@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "dev.holdfast.app"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "dev.holdfast.app"
