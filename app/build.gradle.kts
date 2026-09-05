@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
@@ -24,6 +23,17 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Signed with the debug key so the APK attached to a GitHub release
+            // actually installs. Without any signing config the release build
+            // produces an unsigned APK, which Android refuses outright.
+            //
+            // This is deliberately NOT good enough for Play. The debug key ships
+            // with the Android SDK, so anyone can sign an update that looks like
+            // it came from here. Play needs its own upload key, which is
+            // permanent for the listing and belongs in a secret rather than in
+            // this file. Until that exists, treat the release APK as a sideload
+            // build for people who want to try it.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
