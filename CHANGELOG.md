@@ -17,6 +17,13 @@ First release.
   full, so it can be checked with `sha256sum` by somebody without the app.
 - A bento home: each record as a tile carrying its seal state, entry count and
   chain head.
+- An explainer that ends in a chain you can break yourself: a sample record with
+  buttons that reword, delete and reorder its entries, with the verdict coming
+  from the same `verify()` a real record goes through. Shown on first launch and
+  reachable afterwards from **How this works**.
+- Small, medium and large photo sizes above the entry list, remembered between
+  sessions. Small is a row with a thumbnail rather than a shrunken card, and the
+  seal line and tick are kept at every size.
 
 ### Notes
 
